@@ -14,7 +14,7 @@ The application can be used on standard LDAPv3 directories (OpenLDAP, OpenDS, Ap
 It has the following features:
 * Samba mode to change Samba passwords
 * Active directory mode
-* "RACF mode" to support password change via LDAP modify as required by IBM RACF
+* "RACF mode" to support password change via LDAP bind as required by IBM RACF
 * Local password policy:
   * Minimum/maximum length
   * Forbidden characters
