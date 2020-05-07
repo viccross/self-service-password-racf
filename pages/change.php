@@ -136,18 +136,26 @@ if ( $result === "" ) {
         if ( $errno ) {
             error_log("LDAP - Bind user error $errno  (".ldap_error($ldap).")");
         }
-        if ( ($errno == 49) && $ad_mode ) {
+        if ($errno == 49) { 
             if ( ldap_get_option($ldap, 0x0032, $extended_error) ) {
                 error_log("LDAP - Bind user extended_error $extended_error  (".ldap_error($ldap).")");
                 $extended_error = explode(', ', $extended_error);
-                if ( strpos($extended_error[2], '773') or strpos($extended_error[0], 'NT_STATUS_PASSWORD_MUST_CHANGE') ) {
-                    error_log("LDAP - Bind user password needs to be changed");
-                    $result = "";
-                }
-                if ( ( strpos($extended_error[2], '532') or strpos($extended_error[0], 'NT_STATUS_ACCOUNT_EXPIRED') ) and $ad_options['change_expired_password'] ) {
-                    error_log("LDAP - Bind user password is expired");
-                    $result = "";
-                }
+                if ( $ad_mode ) {
+                    if ( strpos($extended_error[2], '773') or strpos($extended_error[0], 'NT_STATUS_PASSWORD_MUST_CHANGE') ) {
+                        error_log("LDAP - Bind user password needs to be changed");
+                        $result = "";
+                    }
+                    if ( ( strpos($extended_error[2], '532') or strpos($extended_error[0], 'NT_STATUS_ACCOUNT_EXPIRED') ) and $ad_options['change_expired_password'] ) {
+                        error_log("LDAP - Bind user password is expired");
+                        $result = "";
+                    }
+		}
+                if ( $racf_mode ) {
+                    if ( strpos($extended_error[0], 'expired') ) {
+                        error_log("LDAP - Bind user password is expired");
+                        $result = "";
+                    }
+		}
                 unset($extended_error);
             }
         }
@@ -174,7 +182,7 @@ if ( $result === "" ) {
 # Change password
 #==============================================================================
 if ( $result === "" ) {
-    $result = change_password($ldap, $userdn, $newpassword, $ad_mode, $ad_options, $samba_mode, $samba_options, $shadow_options, $hash, $hash_options, $who_change_password, $oldpassword);
+    $result = change_password($ldap, $userdn, $newpassword, $racf_mode, $ad_mode, $ad_options, $samba_mode, $samba_options, $shadow_options, $hash, $hash_options, $who_change_password, $oldpassword);
     if ( $result === "passwordchanged" && isset($posthook) ) {
         $command = posthook_command($posthook, $login, $newpassword, $oldpassword, $posthook_password_encodebase64);
         exec($command, $posthook_output, $posthook_return);
