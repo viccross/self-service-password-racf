@@ -7,13 +7,14 @@
 
 Self Service Password is a PHP application that allows users to change their password in an LDAP directory.
 
-The application can be used on standard LDAPv3 directories (OpenLDAP, OpenDS, ApacheDS, Sun Oracle DSEE, Novell, etc.) and also on Active Directory.
+The application can be used on standard LDAPv3 directories (OpenLDAP, OpenDS, ApacheDS, Sun Oracle DSEE, Novell, etc.) and also on Active Directory.  It also supports IBM RACF, when used with LDBM Native Authentication.
 
 ![Screenshot](http://ltb-project.org/wiki/_media/documentation/self-service-password/1.0/ssp_1_0_change_password.png?w=800&h=666&tok=abc22c)
 
 It has the following features:
 * Samba mode to change Samba passwords
 * Active directory mode
+* "RACF mode" to support password change via LDAP bind as required by IBM RACF
 * Local password policy:
   * Minimum/maximum length
   * Forbidden characters
