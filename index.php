@@ -185,6 +185,9 @@ $mailer->LE            = $mail_newline;
     <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css" />
     <link rel="stylesheet" type="text/css" href="css/font-awesome.min.css" />
     <link rel="stylesheet" type="text/css" href="css/self-service-password.css" />
+<?php if (isset($custom_css)) { ?>
+    <link rel="stylesheet" type="text/css" href="<?php echo $custom_css ?>" />
+<?php } ?>
     <link href="images/favicon.ico" rel="icon" type="image/x-icon" />
     <link href="images/favicon.ico" rel="shortcut icon" />
 <?php if (isset($background_image)) { ?>
@@ -197,6 +200,7 @@ $mailer->LE            = $mail_newline;
 <?php } ?>
 </head>
 <body>
+<?php if (isset($meta_header_file)) { readfile($meta_header_file); } ?>
 
 <div class="container">
 
@@ -246,6 +250,9 @@ $mailer->LE            = $mail_newline;
         });
     });
 </script>
+<?php if (isset($custom_js)) { ?>
+    <script src="<?php echo $custom_js ?>"></script>
+<?php } ?>
 </body>
 </html>
 <?php
