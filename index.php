@@ -141,7 +141,8 @@ $pwd_policy_config = array(
     "pwd_diff_login"          => $pwd_diff_login,
     "pwd_complexity"          => $pwd_complexity,
     "use_pwnedpasswords"      => $use_pwnedpasswords,
-    "pwd_no_special_at_ends"  => $pwd_no_special_at_ends
+    "pwd_no_special_at_ends"  => $pwd_no_special_at_ends,
+    "pwd_max_cons_same"       => $pwd_max_cons_same
 );
 
 if (!isset($pwd_show_policy_pos)) { $pwd_show_policy_pos = "above"; }

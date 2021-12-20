@@ -144,7 +144,7 @@ function generate_sms_token( $sms_token_length ) {
 # Get message criticity
 function get_criticity( $msg ) {
 
-    if ( preg_match( "/nophpldap|phpupgraderequired|nophpmhash|nokeyphrase|ldaperror|nomatch|badcredentials|passworderror|tooshort|toobig|minlower|minupper|mindigit|minspecial|forbiddenchars|sameasold|answermoderror|answernomatch|mailnomatch|tokennotsent|tokennotvalid|notcomplex|smsnonumber|smscrypttokensrequired|nophpmbstring|nophpxml|smsnotsent|sameaslogin|pwned|sshkeyerror|specialatends/" , $msg ) ) {
+    if ( preg_match( "/nophpldap|phpupgraderequired|nophpmhash|nokeyphrase|ldaperror|nomatch|badcredentials|passworderror|tooshort|toobig|minlower|minupper|mindigit|minspecial|forbiddenchars|sameasold|answermoderror|answernomatch|mailnomatch|tokennotsent|tokennotvalid|notcomplex|smsnonumber|smscrypttokensrequired|nophpmbstring|nophpxml|smsnotsent|sameaslogin|pwned|sshkeyerror|specialatends|maxconsecutive/" , $msg ) ) {
     return "danger";
     }
 
@@ -189,6 +189,7 @@ function show_policy( $messages, $pwd_policy_config, $result ) {
     if ( $pwd_min_special     ) { echo "<li>".$messages["policyminspecial"]     ." $pwd_min_special</li>\n"; }
     if ( $pwd_complexity      ) { echo "<li>".$messages["policycomplex"]        ." $pwd_complexity</li>\n"; }
     if ( $pwd_forbidden_chars ) { echo "<li>".$messages["policyforbiddenchars"] ." $pwd_forbidden_chars</li>\n"; }
+    if ( $pwd_max_cons_same   ) { echo "<li>".$messages["policymaxconssame"]    ." $pwd_max_cons_same</li>\n"; }
     if ( $pwd_no_reuse        ) { echo "<li>".$messages["policynoreuse"]                                 ."\n"; }
     if ( $pwd_diff_login      ) { echo "<li>".$messages["policydifflogin"]                               ."\n"; }
     if ( $use_pwnedpasswords  ) { echo "<li>".$messages["policypwned"]                               ."\n"; }
@@ -211,6 +212,13 @@ function check_password_strength( $password, $oldpassword, $pwd_policy_config, $
     $upper = count( $upper_res[0] );
     preg_match_all("/[0-9]/", $password, $digit_res);
     $digit = count( $digit_res[0] );
+
+    if ( isset($pwd_max_cons_same) && ($pwd_max_cons_same > 0) ) {
+        preg_match_all("/(.)\\1{".$pwd_max_cons_same.",}/", $password, $consec_res);
+        if ( count( $consec_res[0] ) > 0 ) {
+          $result="maxconsecutive";
+        }
+    }
 
     $special = 0;
     $special_at_ends = false;
