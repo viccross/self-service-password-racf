@@ -1,4 +1,7 @@
 {
+    "name": "viccross/self-service-password-racf",
+    "description": "Self Service Password utility - RACF support",
+    "license": "GPL-3",
     "require-dev": {
         "phpunit/phpunit": "5.7.*"
     },
