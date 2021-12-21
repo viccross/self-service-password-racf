@@ -2,7 +2,9 @@
 
 require_once __DIR__ . '/../lib/vendor/defuse-crypto.phar';
 
-class CheckPasswordTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase
+
+class CheckPasswordTest extends TestCase
 {
     /**
      * Test check_password_strength function
@@ -24,6 +26,7 @@ class CheckPasswordTest extends \PHPUnit_Framework_TestCase
             "pwd_min_special"         => 1,
             "pwd_special_chars"       => "^a-zA-Z0-9",
             "pwd_forbidden_chars"     => "@",
+	    "pwd_max_cons_chars"      => 2,
             "pwd_no_reuse"            => true,
             "pwd_diff_login"          => true,
             "pwd_complexity"          => 0,
@@ -43,6 +46,7 @@ class CheckPasswordTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("minlower", check_password_strength( "!1PASSWORD", $oldpassword, $pwd_policy_config, $login ) );
         $this->assertEquals("toobig", check_password_strength( "!1verylongPassword", $oldpassword, $pwd_policy_config, $login ) );
         $this->assertEquals("tooshort", check_password_strength( "!1Pa", $oldpassword, $pwd_policy_config, $login ) );
+	$this->assertEquals("maxconsecutive", check_password_strength( "pAAAsword", $oldpassword, $pwd_policy_config, $login ) );
 
         $pwd_policy_config = array(
             "pwd_show_policy"         => true,
