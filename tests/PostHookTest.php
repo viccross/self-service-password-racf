@@ -1,6 +1,8 @@
 <?php
 
-class PostHookTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class PostHookTest extends TestCase
 {
     public function testCommand()
     {
