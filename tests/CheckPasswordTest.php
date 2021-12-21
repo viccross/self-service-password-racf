@@ -26,7 +26,7 @@ class CheckPasswordTest extends TestCase
             "pwd_min_special"         => 1,
             "pwd_special_chars"       => "^a-zA-Z0-9",
             "pwd_forbidden_chars"     => "@",
-            "pwd_max_cons_chars"      => 2,
+            "pwd_max_cons_same"       => 2,
             "pwd_no_reuse"            => true,
             "pwd_diff_login"          => true,
             "pwd_complexity"          => 0,
