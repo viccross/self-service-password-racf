@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../lib/vendor/defuse-crypto.phar';
 
-use PHPUnit\Framework\TestCase
+use PHPUnit\Framework\TestCase;
 
 class CheckPasswordTest extends TestCase
 {
@@ -111,4 +111,3 @@ class CheckPasswordTest extends TestCase
     }
 
 }
-
