@@ -258,7 +258,7 @@ function check_password_strength( $password, $oldpassword, $pwd_policy_config, $
 
     $forbidden = 0;
     if ( isset($pwd_forbidden_chars) && !empty($pwd_forbidden_chars) ) {
-        preg_match_all("/[$pwd_forbidden_chars]/", $password, $forbidden_res);
+        preg_match_all("|[$pwd_forbidden_chars]|", $password, $forbidden_res);
         $forbidden = count( $forbidden_res[0] );
     }
 
