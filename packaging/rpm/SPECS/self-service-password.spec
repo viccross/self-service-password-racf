@@ -14,8 +14,9 @@
 #=================================================
 %define ssp_name	self-service-password
 %define ssp_realname	ltb-project-%{name}
-%define ssp_version	1.3
+%define ssp_version	1.5.4
 %define ssp_destdir     /usr/share/%{name}
+%define ssp_cachedir    /var/cache/%{name}
 
 #=================================================
 # Header
@@ -35,7 +36,7 @@ Source1: self-service-password-apache.conf
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires(pre): coreutils
-Requires: php, php-ldap, php-mbstring
+Requires: php, php-gd, php-ldap, php-mbstring
 
 %description
 Self Service Password is a simple PHP application that allows users to change their password on an LDAP directory.
@@ -55,32 +56,38 @@ rm -rf %{buildroot}
 
 # Create directories
 mkdir -p %{buildroot}/%{ssp_destdir}
+mkdir -p %{buildroot}/%{ssp_cachedir}/cache
 mkdir -p %{buildroot}/%{ssp_destdir}/conf
-mkdir -p %{buildroot}/%{ssp_destdir}/css
-mkdir -p %{buildroot}/%{ssp_destdir}/fonts
-mkdir -p %{buildroot}/%{ssp_destdir}/images
-mkdir -p %{buildroot}/%{ssp_destdir}/js
+mkdir -p %{buildroot}/%{ssp_destdir}/htdocs
 mkdir -p %{buildroot}/%{ssp_destdir}/lang
 mkdir -p %{buildroot}/%{ssp_destdir}/lib
-mkdir -p %{buildroot}/%{ssp_destdir}/pages
 mkdir -p %{buildroot}/%{ssp_destdir}/scripts
+mkdir -p %{buildroot}/%{ssp_destdir}/templates
+mkdir -p %{buildroot}/%{ssp_cachedir}/templates_c
+mkdir -p %{buildroot}/%{ssp_destdir}/vendor
 mkdir -p %{buildroot}/etc/httpd/conf.d
 
 # Copy files
 ## PHP
-install -m 644 *.php     %{buildroot}/%{ssp_destdir}
-install -m 644 conf/*    %{buildroot}/%{ssp_destdir}/conf
-install -m 644 css/*     %{buildroot}/%{ssp_destdir}/css
-install -m 644 fonts/*   %{buildroot}/%{ssp_destdir}/fonts
-install -m 644 images/*  %{buildroot}/%{ssp_destdir}/images
-install -m 644 js/*      %{buildroot}/%{ssp_destdir}/js
-install -m 644 lang/*    %{buildroot}/%{ssp_destdir}/lang
-install -m 644 lib/*.php %{buildroot}/%{ssp_destdir}/lib
-cp -a lib/vendor         %{buildroot}/%{ssp_destdir}/lib
-install -m 644 pages/*   %{buildroot}/%{ssp_destdir}/pages
-install -m 644 scripts/* %{buildroot}/%{ssp_destdir}/scripts
+install -m 644 conf/*         %{buildroot}/%{ssp_destdir}/conf
+install -m 644 htdocs/*.php   %{buildroot}/%{ssp_destdir}/htdocs
+cp -a          htdocs/css     %{buildroot}/%{ssp_destdir}/htdocs
+cp -a          htdocs/images  %{buildroot}/%{ssp_destdir}/htdocs
+cp -a          htdocs/js      %{buildroot}/%{ssp_destdir}/htdocs
+cp -a          htdocs/vendor  %{buildroot}/%{ssp_destdir}/htdocs
+install -m 644 lang/*         %{buildroot}/%{ssp_destdir}/lang
+install -m 644 lib/*.php      %{buildroot}/%{ssp_destdir}/lib
+cp -a          lib/vendor     %{buildroot}/%{ssp_destdir}/lib
+install -m 644 scripts/*      %{buildroot}/%{ssp_destdir}/scripts
+install -m 644 templates/*    %{buildroot}/%{ssp_destdir}/templates
+cp -a          vendor/*       %{buildroot}/%{ssp_destdir}/vendor
 ## Apache configuration
-install -m 644 %{SOURCE1} %{buildroot}/etc/httpd/conf.d/self-service-password.conf
+install -m 644 %{SOURCE1}     %{buildroot}/etc/httpd/conf.d/self-service-password.conf
+
+# Adapt Smarty paths
+sed -i 's:/usr/share/php/smarty3:/usr/share/php/Smarty:' %{buildroot}%{ssp_destdir}/conf/config.inc.php
+sed -i 's:^#$smarty_cache_dir.*:$smarty_cache_dir = "'%{ssp_cachedir}/cache'";:' %{buildroot}%{ssp_destdir}/conf/config.inc.php
+sed -i 's:^#$smarty_compile_dir.*:$smarty_compile_dir = "'%{ssp_cachedir}/templates_c'";:' %{buildroot}%{ssp_destdir}/conf/config.inc.php
 
 %post
 #=================================================
@@ -88,7 +95,8 @@ install -m 644 %{SOURCE1} %{buildroot}/etc/httpd/conf.d/self-service-password.co
 #=================================================
 
 # Change owner
-/bin/chown -R apache:apache %{ssp_destdir}
+/bin/chown apache:apache %{ssp_cachedir}/cache
+/bin/chown apache:apache %{ssp_cachedir}/templates_c
 
 # Move configuration for older version
 if [ -r "%{ssp_destdir}/config.inc.php" ]; then
@@ -109,11 +117,267 @@ rm -rf %{buildroot}
 %config(noreplace) %{ssp_destdir}/conf/config.inc.php
 %config(noreplace) /etc/httpd/conf.d/self-service-password.conf
 %{ssp_destdir}
+%{ssp_cachedir}
 
 #=================================================
 # Changelog
 #=================================================
 %changelog
+* Wed Nov 22 2023 - Clement Oudot <clem@ltb-project.org> - 1.5.4-1
+- gh#773: Missing dependence in debian package breaks installation experience
+- gh#774: Announce that the smarty3 package needs to be installed manually
+- gh#777: Typo in config_tokens.rst
+- gh#793: Updated italian localization
+- gh#816: Hijack SMS codes to an arbitrary phone number
+- gh#818: Do not trust SMS number from crypted token, search it again in LDAP Directory
+* Mon May 15 2023 - Clement Oudot <clem@ltb-project.org> - 1.5.3-1
+- gh#723: Update gpg install command
+- gh#735: Links not interpreted in $messages['sendtokenhelpnomail']
+- gh#736: User account disclosure risk (Token method)
+- gh#741: Add support for Arabic locale
+- gh#744: Update Dutch lang file
+- gh#749: Prevent account disclosure in password reset by mail token page
+- gh#754: Added comment/note over $custom_css
+- gh#760: Problem to install on EL9
+- gh#764: Polish translation error
+- gh#766: Help Menu vs PHP Version issues?
+- gh#767: Bump guzzlehttp/psr7 from 2.4.0 to 2.5.0 in /lib
+- gh#768: Restrict languages to php files
+- gh#771: Restrict languages to php files
+* Thu Oct 06 2022 - Clement Oudot <clem@ltb-project.org> - 1.5.2-1
+- gh#717: Update config_nginx.rst
+- gh#718: Update config_apache.rst
+- gh#720: SMS code won't send when captcha is enabled
+- gh#721: captcha in sendsms check when needed only
+- gh#722: Use gpg instead of apt-key during for deb install
+* Fri Sep 16 2022 - Clement Oudot <clem@ltb-project.org> - 1.5.1-1
+- gh#709: Error 404 with bootstrap.min.css.map
+- gh#711: Error 500 when user is not found in directory for password reset by mail
+- gh#714: Docker - missing libldap-common
+- gh#716: Debian package not in the Apt repo
+* Fri Sep 02 2022 - Clement Oudot <clem@ltb-project.org> - 1.5.0-1
+- gh#494: allow more than one mail_attribute value
+- gh#509: ssh-pub-key verification while change
+- gh#510: feat(ssh): public key check ( #509 )
+- gh#512: docs(sshkey)
+- gh#513: fix(sshkeys): don't send mail notification when entry was not changed
+- gh#514: fix(sshkey): should add one sshPublicKey per key
+- gh#515: docs(multi-tenancy): adds samples setting multi-tenancy header
+- gh#524: "Bind user password needs to be changed" when users change AD expired password
+- gh#530: Change expired password as manager
+- gh#536: adding Kerberos authentication support
+- gh#538: Switch to a new Pwned Passwords module
+- gh#539: fix(version): mismatch between htdocs/index.php and rest/v1/include.php
+- gh#540: Refactor pwned passwords
+- gh#541: core(update): apache 2.4.46
+- gh#544: Rate limit not working on Ubuntu 20.04 apt install
+- gh#545: docs(ratelimit): typo
+- gh#546: feat(mails): using several mail attributes
+- gh#547: Update de.inc.php
+- gh#549: Added sms api for signal-cli
+- gh#551: fix(docs): invalid nginx root serving ssp
+- gh#556: Somthing missing in the OVH API doc
+- gh#558: fix(docs): ratelimit check interval should be 1h, not 1min
+- gh#559: chore(deps): bump phpmailer/phpmailer from 6.4.1 to 6.5.0 in /lib
+- gh#562: Document $allowed_lang var
+- gh#563: show_menu = false displays an empty UL
+- gh#564: Updated IT translation
+- gh#566: ansible role for ltb-project
+- gh#571: Fix Error 500 when user is not found in ldap for sms reset
+- gh#575: Updated catalan translation
+- gh#576: fix(api): phpmailer needs to be included (#573)
+- gh#579: Add a request example about the rest api interface
+- gh#587: Captcha misaligned in the mobile version
+- gh#588: fix: captcha misaligned in the mobile version
+- gh#592: Fix 563
+- gh#594: Update simplified Chinese translation
+- gh#598: fix(docs) - see ltb-project/self-service-password#590
+- gh#602: Errors when Using Captchas with Password Reset Emails
+- gh#605: Display value associative table with line break HTML element <br>
+- gh#606: Update fr translation
+- gh#608: objectClass: ldapPublicKey should be added when needed
+- gh#609: Fix some undefined warnings
+- gh#610: security: service discloses existence of user accounts
+- gh#611: docker: image build fails and/or ldap config missing
+- gh#612: fix apache / bullseye
+- gh#619: Issue 608
+- gh#628: Implement Argon2 hashing
+- gh#631: Add the ability to exclude IPs from rate limit settings.
+- gh#635: Missing Documentation
+- gh#642: Add some cosmetic css properties to sshkey textarea
+- gh#646: Fix translation
+- gh#647: chore(deps): bump guzzlehttp/psr7 from 2.1.0 to 2.2.1 in /lib
+- gh#650: Fixing issue with ldaps or ldap startls
+- gh#654: Rate limit for Password reset
+- gh#655: AD doesnt accept TLS
+- gh#658: Allow more than one mobile attribute
+- gh#659: chore(deps): bump guzzlehttp/guzzle from 7.4.0 to 7.4.4 in /lib
+- gh#661: Update bootstrap to v3.4.1
+- gh#662: Compatibility with PHP 8.1
+- gh#664: chore(deps): bump guzzlehttp/guzzle from 7.4.4 to 7.4.5 in /lib
+- gh#669: Update TR translation
+- gh#673: feat(sms): Allow more than one mobile attribute #658
+- gh#675: Feat mail factorize attributes
+- gh#676: Remove warning "Decoding error"
+- gh#677: Use correct message identifiers
+- gh#680: captcha use dedicated session cookie fix #602
+- gh#682: PHP Notice:  Trying to access array offset on value of type resource
+- gh#683: Rate limit optional support per ip (ratelimit_filter_by_ip)
+- gh#684: Add rate limit checking for any password change request include fix #654
+- gh#685: hide failure by default for mailnomatch issue #610
+- gh#686: fix check password toward ldap attribute for token based methods
+- gh#687: rest api checkpassword bugs
+- gh#688: Fix password check ldap
+- gh#695: Improve password check in REST API by reading user entry to honor pwd_forbidden_ldap_fields configuration parameter
+- gh#696: Improve documentation, parse php code
+- gh#697: blank page when reset with questions without answers set.
+- gh#698: ldap_get_dn() expects parameter 2
+- gh#699: Check parameters before calling hash_equals
+- gh#700: Issue with AD "reset password on next logon"
+- gh#701: Use require_once to avoid loop on local configuration file inclusion
+- gh#702: Use require_once for file inclusion
+- gh#703: Fix reset by questions display after password change
+- gh#704: Use recent version of PHP and Smarty in our Docker image
+- gh#705: Create upgrade doc for 1.5
+- gh#708: Get entry in checkpassword REST service
+* Wed Jun 29 2022 - Clement Oudot <clem@ltb-project.org> - 1.4.5-1
+- Latest version of 1.4.4 not working by @Max7641 in #670
+* Fri Jun 24 2022 - Clement Oudot <clem@ltb-project.org> - 1.4.4-1
+- Update bootstrap to v3.4.1 by @bohze in #663
+- Separate Smarty debug and debug by @coudot in #666
+- Typo in resetbytoken resulting in mails not being sent by @faust64 in #529
+- Don't send notification if modification failed by @faust64 in #542
+- PHP Fatal error: Uncaught TypeError: ldap_get_dn() in #648
+- REST files are not shipped in packages in #660
+* Wed May 12 2021 - Clement Oudot <clem@ltb-project.org> - 1.4.3-1
+- gh#516: Docker image does not have sendmail in it
+- gh#517: fix(mail): add sendmail to Docker image
+- gh#520: [Security:high] Reset by SMS can be used to change any account password
+- gh#521: If token was provided by SMS, check initial SMS code before changing password
+- gh#522: [Security:low] Dismiss captcha once it is used
+* Tue May 04 2021 - Clement Oudot <clem@ltb-project.org> - 1.4.2-1
+- gh#504: Cannot use docker get gregwar/captcha----use docker
+- gh#505: fix(captcha): missing gd library
+- gh#506: I have a little problem - I can't use SMS for the next step
+- gh#507: fix(reset)
+- gh#508: fix(undefined)
+- gh#511: Bump phpmailer/phpmailer from 6.3.0 to 6.4.1 in /lib
+* Tue Apr 27 2021 - Clement Oudot <clem@ltb-project.org> - 1.4.1-1
+- gh#501: Remove extra semicolon from setquestions template
+- gh#502: Remove alt text so empty logo doesn't show 'msg_title' twice
+* Tue Apr 20 2021 - Clement Oudot <clem@ltb-project.org> - 1.4-1
+- gh#52: Docker image
+- gh#109: Use Smarty framework
+- gh#133: Get extended ldap error in case of  "passworderror" from LDAP directory
+- gh#155: Use password modify extended operation
+- gh#156: Use password policy control
+- gh#157: Using ldap_exop_passwd if available (PHP>=7.2)
+- gh#183: Reset questions and answers (Questions/suggestion?)
+- gh#220: Pre Hook script
+- gh#224: SMS OVH provider
+- gh#225: rate-limiting with json files
+- gh#226: Remove annoying warnings
+- gh#229: Add php-curl to prerequisite
+- gh#233: Translated some lines on file pt-BR.inc.php to Brazilian Portuguese
+- gh#238: Provide a way to know the installed version
+- gh#239: Fix in_array() error
+- gh#250: Web Autocomplete
+- gh#251: Add autocomplete settings on form fields (#250)
+- gh#263: phpunit test fail
+- gh#264: add support for password files (aka pathway to docker secrets)
+- gh#270: Added initial Norwegian (nb-NO) translation
+- gh#272: Allowing Email as URL-Parameter
+- gh#273: Non-english characters are being stipped in posthook call
+- gh#274: Add base64 encoding option to passwords in posthook commands
+- gh#275: Create unit test for posthook_command (ltb-project#273)
+- gh#276: Add a configuration option to force locale (ltb-project#273)
+- gh#279: Traditional Chinese Support
+- gh#281: Change password line in conf to single quotes
+- gh#296: add policy: disallow special character at beginning or end
+- gh#299: New policy: Forbidden words
+- gh#300: add specialatends and show policy criticity check, fix german translation
+- gh#301: New policy: Forbidden ldap fields
+- gh#303: add support for setting multiple question/answers.
+- gh#306: feature request: add another password quality check
+- gh#311: Another Captcha than Google Captcha
+- gh#315: Fixed few pronomous
+- gh#318: Improve multiple answers
+- gh#322: add config.inc.local.php in .gitignore
+- gh#327: Configure several LDAP servers and select one depending on context
+- gh#328: Configure several LDAP servers and select one depending on context
+- gh#329: Prefill user login fields with an HTTP header value
+- gh#330: Prefill user login fields with an HTTP header value
+- gh#331: SMS Twilio Integration
+- gh#332: Docker file
+- gh#333: SMS Twilio Integration
+- gh#334: Missing support for sambaKickofftime
+- gh#335: support for sambaKickofftime, issue 334
+- gh#336: Translate Pwned, specialatends and logic
+- gh#340: Update sl.inc.php
+- gh#342: Hide token URLs unless debug mode is on
+- gh#350: address CVE-2019-11043
+- gh#353: prevent variable interpretation when $ in password
+- gh#354: default_action set to sendtoken with use_change set to true, can not use change form
+- gh#355: ltb-project#354 : Can use change tab when default_action not set to c
+- gh#356: ltb-project#322 : Add .gitignore for config files
+- gh#359: Show extended LDAP error message after password change was denied
+- gh#360: Improved pt-BR.inc.php with more colloquial form
+- gh#364: obscure_failure_messages configuration parameter broken
+- gh#365: Revert "Fix in_array() error"
+- gh#367: Show LDAP extended error message (ltb-project#359)
+- gh#371: I added a new translation (basque, "eu") and translated 2 lines of span
+- gh#372: Use Smarty framework
+- gh#377: [DOC] php-filter as dependencie
+- gh#381: create centos 8 package
+- gh#382: Expose more PHPMail parameters
+- gh#383: Set SMTPOptions from local configuration
+- gh#389: ADD: Samba synchronization via call to smbpasswd
+- gh#395: Feature enhancements to security question functionality
+- gh#404: consider to move inline resources
+- gh#405: Update jquery to latest, 3.5.1 currently
+- gh#406: Move inline javascript to its own file fixes (#404)
+- gh#407: Upgrade jquery to 3.5.1
+- gh#408: documentation for docker
+- gh#409: LDAP exop password modify
+- gh#410: More work on smarty migration
+- gh#411: Allowing Email as URL-Parameter
+- gh#412: Move documentation in sources
+- gh#413: Update Polish localization
+- gh#415: Fixes units tests
+- gh#416: Prehook - ltb-project/self-service-password#220
+- gh#417: documentation
+- gh#419: Update config_ldap.rst
+- gh#424: Configure cache dir and template cache dir
+- gh#428: Added best practices of autocomplete for password managers
+- gh#429: I18n fr
+- gh#430: feat(diff-check): #306
+- gh#433: fix(branding): logo in menubar
+- gh#439: Invalid Mail Header, Double To: Field / Outdated PHPMailer Version
+- gh#441: typo in show policies dutch
+- gh#447: Provide WebServices / REST API
+- gh#449: sms_partially_hide_number not working after migration to smarty
+- gh#451: session and token lifetime
+- gh#453: Can't disable tokens?
+- gh#454: fix typo in nl translation
+- gh#456: Mtkraai master
+- gh#457: Link to github page added to README.md
+- gh#460: update from PHP-7.2
+- gh#466: Fix recaptcha on curent master
+- gh#468: updating php to 7.4
+- gh#469: docs(docker)
+- gh#470: Added Serbian language
+- gh#471: Added Serbian language
+- gh#474: Language selection issue
+- gh#475: Option for ppolicy control
+- gh#476: fix(lang): re-include allowed_lang check
+- gh#477: docs(keyphrase): update comments/docs, when should keyphrase be set
+- gh#478: fix(pebkac)
+- gh#479: Update Serbian translation
+- gh#481: New captcha to replace reCAPTCHA
+- gh#482: Upgrade to PHPMailer 6.3.0
+- gh#483: add hook in rest api and a script for multi ldap change password
+- gh#491: do not override config.inc.local.php vars
+- gh#499: Update multi ldap script
 * Tue Jul 10 2018 - Clement Oudot <clem@ltb-project.org> - 1.3-1
 - gh#182: Message incorrect when resetting using email but not supplying email (minor)
 - gh#187: Security assessment issues

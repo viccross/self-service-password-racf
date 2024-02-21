@@ -1,6 +1,6 @@
 <?php
 
-class LangTest extends \PHPUnit_Framework_TestCase
+class LangTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * Test language files for missing and excess translations
@@ -18,7 +18,7 @@ class LangTest extends \PHPUnit_Framework_TestCase
                 }
             }
             closedir($handle);
-	}
+        }
 
         require("lang/en.inc.php");
         $reference = $messages;
@@ -32,7 +32,7 @@ class LangTest extends \PHPUnit_Framework_TestCase
             if (!empty($missing)) {
                 $error .= "\nMissing translations in $lang: " . implode(', ', $missing);
             }
-	    
+
             $extra = array_diff(array_keys($messages), array_keys($reference));
             if (!empty($extra)) {
                 $error .= "\nExtra translations in $lang: " . implode(', ', $extra);

@@ -1,7 +1,8 @@
 # LDAP Tool Box Self Service Password
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/372/badge)](https://bestpractices.coreinfrastructure.org/projects/372)
-[![Build Status](https://travis-ci.org/ltb-project/self-service-password.svg?branch=master)](https://travis-ci.org/ltb-project/self-service-password)
+[![Build Status](https://github.com/ltb-project/self-service-password/actions/workflows/ci.yml/badge.svg)](https://github.com/ltb-project/self-service-password/actions/workflows/ci.yml)
+[![Documentation Status](https://readthedocs.org/projects/self-service-password/badge/?version=latest)](https://self-service-password.readthedocs.io/en/latest/?badge=latest)
 
 ## Presentation
 
@@ -9,7 +10,7 @@ Self Service Password is a PHP application that allows users to change their pas
 
 The application can be used on standard LDAPv3 directories (OpenLDAP, OpenDS, ApacheDS, Sun Oracle DSEE, Novell, etc.) and also on Active Directory.  It also supports IBM RACF, when used with LDBM Native Authentication.
 
-![Screenshot](http://ltb-project.org/wiki/_media/documentation/self-service-password/1.0/ssp_1_0_change_password.png?w=800&h=666&tok=abc22c)
+![Screenshot](https://ltb-project.org/documentation/_images/ssp_1_0_change_password.png)
 
 It has the following features:
 * Samba mode to change Samba passwords
@@ -27,25 +28,57 @@ It has the following features:
 * Reset by mail challenge (token sent by mail)
 * Reset by SMS (trough external Email 2 SMS service or SMS API)
 * Change SSH Key in LDAP directory
-* reCAPTCHA (Google API)
+* Captcha (built-in)
 * Mail notification after password change
-* Hook script after password change
+* Hook script before and after password change
 
 ## Prerequisite
+
+* PHP (>=7)
 * PHP extensions required:
-  * php-openssl (token crypt, probably built-in)
-  * php-mbstring (reset mail)
   * php-curl (haveibeenpwned api)
-  * php-ldap
+  * php-gd (captcha)
   * php-filter
-* strong cryptography functions available (for random_compat, php 7 or libsodium or /dev/urandom readable or php-mcrypt extension installed)
+  * php-ldap
+  * php-mbstring (reset mail)
+  * php-openssl (token crypt, probably built-in)
+* Smarty 3
+* strong cryptography functions available (for random_compat, PHP 7 or libsodium or /dev/urandom readable or php-mcrypt extension installed)
 * valid PHP mail server configuration (reset mail)
 * valid PHP session configuration (reset mail)
 
 ## Documentation
 
-Documentation is available on http://ltb-project.org/wiki/documentation/self-service-password
+Documentation is available on https://self-service-password.readthedocs.io/en/latest/
+
+## Docker
+
+We provide an [official Docker image](https://hub.docker.com/r/ltbproject/self-service-password).
+
+Create a minimal configuration file:
+```
+vi ssp.conf.php
+```
+```php
+<?php // My SSP configuration
+$keyphrase = "mysecret";
+$debug = true;
+?>
+```
+
+And run:
+```
+docker run -p 80:80 \
+    -v $PWD/ssp.conf.php:/var/www/conf/config.inc.local.php \
+    -it docker.io/ltbproject/self-service-password:latest
+```
 
 ## Download
 
-Tarballs and packages for Debian and Red Hat are available on http://ltb-project.org/wiki/download#self_service_password
+Tarballs and packages for Debian and Red Hat are available on https://ltb-project.org/download.html
+
+Debian and Red Hat repositories are also available, see [installation instructions](https://self-service-password.readthedocs.io/en/latest/installation.html).
+
+## Source code
+
+Source codes are available on https://github.com/ltb-project/self-service-password
