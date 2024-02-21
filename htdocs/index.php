@@ -327,4 +327,7 @@ foreach ($dependency_check_results as $result) {
 }
 $smarty->assign('dependency_errors', $dependency_errors);
 
+# Set meta_header_file
+if (isset($meta_header_file)) { $smarty->assign('meta_header_file', $meta_header_file); }
+
 $smarty->display('index.tpl');

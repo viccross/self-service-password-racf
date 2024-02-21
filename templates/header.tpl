@@ -25,4 +25,5 @@
 {/if}
 </head>
 <body>
+{if $meta_header_file}{fetch file=$meta_header_file}{/if}
 <div class="container">
